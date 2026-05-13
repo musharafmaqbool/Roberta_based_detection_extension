@@ -1,0 +1,85 @@
+/* Highlight styles for deceptive elements */
+.sentinel-dark-pattern {
+    outline: 2px solid #ff9100 !important; /* Neon Orange */
+    outline-offset: 2px !important;
+    position: relative !important;
+    transition: all 0.2s ease-in-out;
+}
+
+.sentinel-dark-pattern:hover {
+    background-color: rgba(255, 145, 0, 0.1) !important;
+    box-shadow: 0 0 10px rgba(255, 145, 0, 0.5) !important;
+}
+
+.sentinel-phishing {
+    outline: 2px solid #ff1744 !important; /* Neon Red */
+    outline-offset: 2px !important;
+    position: relative !important;
+    transition: all 0.2s ease-in-out;
+}
+
+.sentinel-phishing:hover {
+    background-color: rgba(255, 23, 68, 0.1) !important;
+    box-shadow: 0 0 10px rgba(255, 23, 68, 0.5) !important;
+}
+
+/* Tooltip Styling (Cybersecurity Dark Mode / Glassmorphism) */
+#sentinel-tooltip {
+    position: absolute;
+    z-index: 2147483647; /* Max z-index to stay on top */
+    background: rgba(15, 20, 25, 0.9);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 12px;
+    width: 250px;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    pointer-events: none; /* Let mouse pass through to element below */
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.sentinel-tooltip-hidden {
+    opacity: 0;
+    transform: translateY(5px);
+    visibility: hidden;
+}
+
+.sentinel-tooltip-visible {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+}
+
+.sentinel-tooltip-header {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sentinel-tooltip-header.dp {
+    color: #ff9100; /* Neon Orange */
+}
+
+.sentinel-tooltip-header.phish {
+    color: #ff1744; /* Neon Red */
+}
+
+.sentinel-tooltip-body p {
+    margin: 4px 0;
+    line-height: 1.4;
+}
+
+.sentinel-tooltip-footer {
+    margin-top: 8px;
+    font-size: 11px;
+    color: #a0a0a0;
+    text-align: right;
+}

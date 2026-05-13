@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sentinel Status</title>
+    <link rel="stylesheet" href="popup.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <span class="glitch" data-text="SENTINEL">SENTINEL</span>
+            </div>
+            <div class="status-indicator">
+                <span class="dot active" id="system-status-dot"></span>
+                <span id="system-status-text">Active</span>
+            </div>
+        </header>
+
+        <div class="risk-meter-container">
+            <svg class="risk-meter" viewBox="0 0 100 50">
+                <path class="meter-bg" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke-width="8" stroke-linecap="round"/>
+                <path class="meter-fill" id="risk-arc" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke-width="8" stroke-linecap="round" stroke-dasharray="125.6" stroke-dashoffset="125.6"/>
+            </svg>
+            <div class="risk-score">
+                <span id="risk-value">0.0</span>
+                <span class="risk-label">Risk Score</span>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box dp">
+                <div class="stat-value" id="dp-count">0</div>
+                <div class="stat-label">Dark Patterns</div>
+            </div>
+            <div class="stat-box phish">
+                <div class="stat-value" id="phish-count">0</div>
+                <div class="stat-label">Phishing Risks</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-row">
+                <label for="master-toggle">Enable Sentinel</label>
+                <label class="switch">
+                    <input type="checkbox" id="master-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>
