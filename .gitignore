@@ -1,0 +1,11 @@
+venv/
+backend/venv/
+
+__pycache__/
+*.pyc
+.env
+.cache/
+models/
+*.safetensors
+*.bin
+node_modules/

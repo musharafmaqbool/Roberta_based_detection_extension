@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateUI(stats) {
         if (!stats) return;
 
-        console.log("📊 Sentinel Popup: Updating UI with stats:", stats);
+        console.log("📊 [Sentinel Popup] Updating UI with stats:", stats);
 
         dpCount.textContent = stats.dpCount || 0;
         phishCount.textContent = stats.phishCount || 0;
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     (response) => {
                         if (chrome.runtime.lastError) {
                             // Gracefully handle "Receiving end does not exist"
-                            console.warn("Sentinel Popup:", chrome.runtime.lastError.message);
+                            console.warn("⚠️ [Sentinel Popup] Background unreachable:", chrome.runtime.lastError.message);
                             return;
                         }
                         if (response) {
@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 );
             } catch (err) {
-                console.error("Sentinel Popup Error:", err);
+                console.error("❌ [Sentinel Popup] Fetch Error:", err);
             }
         });
     }
@@ -73,11 +73,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 chrome.tabs.sendMessage(tabs[0].id, { action: "toggle_status", isActive: isActive }, (response) => {
                     // Ignore errors if the content script hasn't loaded on this page (e.g., chrome:// extensions page)
                     if (chrome.runtime.lastError) {
-                        console.info("Sentinel: Content script not available on this tab.");
+                        console.info("ℹ️ [Sentinel Popup] Content script not available on this tab.");
                     }
                 });
             } catch (err) {
-                console.error("Sentinel Toggle Error:", err);
+                console.error("❌ [Sentinel Popup] Toggle Error:", err);
             }
         });
     });
