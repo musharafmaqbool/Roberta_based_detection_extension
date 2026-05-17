@@ -1,61 +1,103 @@
-from app.services.rule_engine import RuleEngine
-from app.services.roberta_model import RobertaDeceptionModel
-from app.utils.logger import get_logger
-import asyncio
+from app.services.roberta_model import roberta_service
 
-logger = get_logger("InferenceService")
 
 class InferenceService:
-    """
-    Coordinates between the fast RuleEngine and the slower RobertaDeceptionModel.
-    Designed to support async inference pipelines and model swapping.
-    """
-    def __init__(self):
-        logger.info("Initializing InferenceService...")
-        self.rule_engine = RuleEngine()
-        
-        # Load the ML model. In a true prod environment, this might be loaded
-        # lazily or injected, but we initialize it here for now.
-        try:
-            self.ml_model = RobertaDeceptionModel()
-            self.use_ml = True
-        except Exception as e:
-            logger.error(f"Failed to load ML model, falling back to rules only. Error: {e}")
-            self.use_ml = False
 
-    async def analyze_element(self, text: str) -> dict:
-        """
-        Analyzes a single element's text.
-        First tries the fast rule engine. If no match, falls back to the ML model.
-        """
-        # 1. Fast path: Rule-based detection
-        rule_result = self.rule_engine.analyze(text)
-        if rule_result:
-            return rule_result
-            
-        # 2. Slow path: ML Inference (if available)
-        if self.use_ml:
-            try:
-                logger.debug("Delegating to ML model inference...")
-                loop = asyncio.get_running_loop()
-                ml_result = await asyncio.wait_for(
-                    loop.run_in_executor(None, self.ml_model.predict, text),
-                    timeout=5.0
-                )
-                logger.debug("ML model inference completed successfully.")
-                return ml_result
-            except asyncio.TimeoutError:
-                logger.error("❌ ML inference timed out after 5.0 seconds.")
-            except Exception as e:
-                logger.error(f"❌ ML inference failed with error: {e}")
-            
-        # 3. Fallback: No detection
+    async def analyze_element(self, element):
+
+        text = element.get("text", "")
+        url = element.get("url", "")
+
+        # -----------------------------
+        # DARK PATTERN INFERENCE
+        # -----------------------------
+
+        darkpattern_result = roberta_service.predict_darkpattern(text)
+
+        # -----------------------------
+        # PHISHING INFERENCE
+        # -----------------------------
+
+        phishing_input = url if url else text
+
+        phishing_result = roberta_service.predict_phishing(
+            phishing_input
+        )
+
+        # -----------------------------
+        # BUILD RESPONSE
+        # -----------------------------
+
+        dark_pattern_threshold = 0.995
+        phishing_threshold = 0.999
+
+        is_dark_pattern = (
+            darkpattern_result["prediction"] == 1
+            and darkpattern_result["confidence"] > dark_pattern_threshold
+        )
+
+        is_phishing = (
+            phishing_result["prediction"] == 1
+            and phishing_result["confidence"] > phishing_threshold
+        )
+
         return {
-            "is_dark_pattern": False,
-            "dark_pattern_class": 0,
-            "dark_pattern_conf": 0.0,
-            "is_phishing": False,
-            "phishing_conf": 0.0,
-            "category": "None",
-            "explanation": "No deceptive patterns detected."
+            "id": element.get("id"),
+
+            "is_dark_pattern": is_dark_pattern,
+
+            "dark_pattern_conf":
+                round(darkpattern_result["confidence"], 4),
+
+            "dark_pattern_class":
+                1 if is_dark_pattern else 0,
+
+            "is_phishing": is_phishing,
+
+            "phishing_conf":
+                round(phishing_result["confidence"], 4),
+
+            "category":
+                "dark_pattern"
+                if is_dark_pattern
+                else (
+                    "phishing"
+                    if is_phishing
+                    else "safe"
+                ),
+
+            "explanation":
+                self.generate_explanation(
+                    is_dark_pattern,
+                    is_phishing,
+                    darkpattern_result["confidence"],
+                    phishing_result["confidence"]
+                )
         }
+
+    def generate_explanation(
+        self,
+        is_dark_pattern,
+        is_phishing,
+        darkpattern_conf,
+        phishing_conf
+    ):
+
+        if is_dark_pattern:
+            return (
+                f"Dark pattern detected "
+                f"(confidence: "
+                f"{darkpattern_conf:.2f})"
+            )
+
+        if is_phishing:
+            return (
+                f"Potential phishing detected "
+                f"(confidence: "
+                f"{phishing_conf:.2f})"
+            )
+
+        return "Element appears safe."
+
+
+inference_service = InferenceService()

@@ -31,7 +31,13 @@ async def analyze_elements(request: AnalyzeRequest, service: InferenceService = 
         if not element.text or len(element.text.strip()) == 0:
             continue
             
-        prediction = await service.analyze_element(element.text)
+        prediction = await service.analyze_element(
+            {
+                "id": element.id,
+                "text": element.text,
+                "url": element.url
+            }
+        )
         
         # Calculate risk contribution
         risk_score = 0
@@ -45,7 +51,6 @@ async def analyze_elements(request: AnalyzeRequest, service: InferenceService = 
         # If flagged, add to results
         if prediction["is_dark_pattern"] or prediction["is_phishing"]:
             result = PredictionResult(
-                id=element.id,
                 **prediction
             )
             results.append(result)

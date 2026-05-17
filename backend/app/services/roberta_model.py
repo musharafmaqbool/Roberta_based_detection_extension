@@ -1,34 +1,108 @@
-from app.utils.logger import get_logger
+import torch
 
-logger = get_logger("RobertaModel")
+from transformers import (
+    RobertaTokenizer,
+    RobertaForSequenceClassification
+)
 
-class RobertaDeceptionModel:
-    """
-    Placeholder for the fine-tuned RoBERTa model.
-    Designed to easily swap in custom weights later.
-    Currently uses zero-shot classification to simulate the dual-head architecture.
-    """
-    def __init__(self, model_path: str = None):
-        logger.debug(f"Initializing RobertaDeceptionModel in MOCK mode (Transformers bypassed).")
-        self.classifier = None
-        
-    def predict(self, text: str):
-        """
-        Simulates the dual-head output for Dark Patterns and Phishing.
-        """
-        if not text or len(text.strip()) < 3:
-            return self._empty_prediction()
 
-        logger.debug(f"Running MOCK ML inference on text length: {len(text)}")
-        return self._empty_prediction()
+class RobertaInferenceService:
 
-    def _empty_prediction(self):
+    def __init__(self):
+
+        self.device = torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu"
+        )
+
+        print(f"[Roberta] Using device: {self.device}")
+
+        # -----------------------------
+        # DARK PATTERN MODEL
+        # -----------------------------
+
+        self.darkpattern_tokenizer = RobertaTokenizer.from_pretrained(
+            "roberta-base"
+        )
+
+        self.darkpattern_model = RobertaForSequenceClassification.from_pretrained(
+            "models/roberta_darkpattern_v2"
+        ).to(self.device)
+
+        self.darkpattern_model.eval()
+
+        print("[Roberta] Dark Pattern model loaded.")
+
+        # -----------------------------
+        # PHISHING MODEL
+        # -----------------------------
+
+        self.phishing_tokenizer = RobertaTokenizer.from_pretrained(
+            "roberta-base"
+        )
+
+        self.phishing_model = RobertaForSequenceClassification.from_pretrained(
+            "models/roberta_phishing_model"
+        ).to(self.device)
+
+        self.phishing_model.eval()
+
+        print("[Roberta] Phishing model loaded.")
+
+    # ---------------------------------
+    # DARK PATTERN PREDICTION
+    # ---------------------------------
+
+    def predict_darkpattern(self, text):
+
+        inputs = self.darkpattern_tokenizer(
+            text,
+            return_tensors="pt",
+            truncation=True,
+            padding=True,
+            max_length=128
+        ).to(self.device)
+
+        with torch.no_grad():
+            outputs = self.darkpattern_model(**inputs)
+
+        probs = torch.softmax(outputs.logits, dim=1)
+
+        prediction = torch.argmax(probs, dim=1).item()
+
+        confidence = probs[0][prediction].item()
+
         return {
-            "is_dark_pattern": False,
-            "dark_pattern_class": 0,
-            "dark_pattern_conf": 0.0,
-            "is_phishing": False,
-            "phishing_conf": 0.0,
-            "category": "None",
-            "explanation": "No complex deceptive patterns detected."
+            "prediction": prediction,
+            "confidence": confidence
         }
+
+    # ---------------------------------
+    # PHISHING PREDICTION
+    # ---------------------------------
+
+    def predict_phishing(self, text):
+
+        inputs = self.phishing_tokenizer(
+            text,
+            return_tensors="pt",
+            truncation=True,
+            padding=True,
+            max_length=128
+        ).to(self.device)
+
+        with torch.no_grad():
+            outputs = self.phishing_model(**inputs)
+
+        probs = torch.softmax(outputs.logits, dim=1)
+
+        prediction = torch.argmax(probs, dim=1).item()
+
+        confidence = probs[0][prediction].item()
+
+        return {
+            "prediction": prediction,
+            "confidence": confidence
+        }
+
+
+roberta_service = RobertaInferenceService()
