@@ -13,7 +13,8 @@ class SentinelHighlights {
 
         let severityClass = '';
 
-        if (prediction.is_phishing) {
+        // Only visually highlight phishing if it is flagged as phishing and has High Risk level
+        if (prediction.is_phishing && prediction.phishing_risk_level === 'High Risk') {
             severityClass = 'sentinel-phishing';
         } else if (prediction.is_dark_pattern) {
             severityClass = 'sentinel-dark-pattern';

@@ -1,25 +1,173 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <title>Sentinel Test</title>
+    <meta charset="UTF-8">
+    <title>Sentinel Demo Environment</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            padding: 40px;
+        }
+
+        .section {
+            background: white;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            color: #111;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        button {
+            padding: 12px 18px;
+            margin: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        input {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            width: 320px;
+        }
+
+        .danger {
+            background: #ff4d4d;
+            color: white;
+        }
+
+        .warning {
+            background: orange;
+            color: black;
+        }
+
+        .safe {
+            background: #28c76f;
+            color: white;
+        }
+
+        .banner {
+            background: #fff3cd;
+            padding: 15px;
+            border-left: 6px solid orange;
+            margin-bottom: 15px;
+        }
+    </style>
 </head>
 
 <body>
 
-    <h1>Special Offer</h1>
+    <h1>🛡 Sentinel AI Security Demo Page</h1>
 
-    <button>Verify your account immediately</button>
+    <!-- SAFE SECTION -->
+    <div class="section">
 
-    <button>Hurry! Only 2 items left!</button>
+        <h2>✅ Safe Elements</h2>
 
-    <button>Claim reward now</button>
+        <button class="safe">
+            Add to Cart
+        </button>
 
-    <button>No thanks, I don't like saving money</button>
+        <button class="safe">
+            Continue Shopping
+        </button>
 
-    <form>
+        <p>
+            Welcome to our online store.
+        </p>
+
+    </div>
+
+    <!-- DARK PATTERNS -->
+    <div class="section">
+
+        <h2>⚠️ Dark Pattern Examples</h2>
+
+        <div class="banner">
+            Hurry! Only 2 items left in stock!
+        </div>
+
+        <button class="warning">
+            Claim Reward Now
+        </button>
+
+        <button class="warning">
+            Limited Time Offer! Buy Immediately
+        </button>
+
+        <button class="warning">
+            No thanks, I hate saving money
+        </button>
+
+        <button class="warning">
+            Last chance before price increases
+        </button>
+
+    </div>
+
+    <!-- PHISHING -->
+    <div class="section">
+
+        <h2>🚨 Phishing Examples</h2>
+
+        <p>
+            Verify your PayPal account immediately.
+        </p>
+
+        <input type="text" placeholder="Enter banking username">
+
         <input type="password" placeholder="Enter banking password">
-    </form>
+
+        <button class="danger">
+            Login To Secure Account
+        </button>
+
+        <button class="danger">
+            Verify Identity Immediately
+        </button>
+
+        <p>
+            Your account will be suspended unless verified now.
+        </p>
+
+    </div>
+
+    <!-- MIXED -->
+    <div class="section">
+
+        <h2>🧪 Mixed Detection Examples</h2>
+
+        <button>
+            Continue
+        </button>
+
+        <button>
+            Accept Cookies
+        </button>
+
+        <button class="warning">
+            Act now before this deal disappears forever
+        </button>
+
+        <p>
+            Confirm your credentials to unlock rewards.
+        </p>
+
+    </div>
 
 </body>
 

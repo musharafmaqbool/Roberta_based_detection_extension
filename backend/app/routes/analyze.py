@@ -35,27 +35,38 @@ async def analyze_elements(request: AnalyzeRequest, service: InferenceService = 
             {
                 "id": element.id,
                 "text": element.text,
+                "tagName": element.tagName,
                 "url": element.url
             }
         )
         
-        # Calculate risk contribution
+        # Calculate risk contribution considering domain trust, heuristics, and risk level
         risk_score = 0
         if prediction["is_dark_pattern"]:
+            # Dark pattern contribution
             risk_score += prediction["dark_pattern_conf"]
-        if prediction["is_phishing"]:
-            risk_score += prediction["phishing_conf"] * 1.5 # Phishing has higher risk weight
+            
+        # Phishing risk bands contribution
+        if prediction["phishing_risk_level"] == "High Risk":
+            # High risk phishing gets a high risk weight
+            risk_score += prediction["phishing_conf"] * 2.0
+        elif prediction["phishing_risk_level"] == "Medium Risk":
+            # Medium risk phishing gets moderate weight
+            risk_score += prediction["phishing_conf"] * 0.8
+        elif prediction["phishing_risk_level"] == "Low Risk":
+            # Low risk phishing gets minimal weight
+            risk_score += prediction["phishing_conf"] * 0.2
             
         total_risk += risk_score
 
-        # If flagged, add to results
-        if prediction["is_dark_pattern"] or prediction["is_phishing"]:
+        # Add to results if there is an active dark pattern, high-risk, or medium-risk phishing
+        if prediction["is_dark_pattern"] or prediction["is_phishing"] or prediction["phishing_risk_level"] == "Medium Risk":
             result = PredictionResult(
                 **prediction
             )
             results.append(result)
 
-    # Normalize risk score (simple heuristic for MVP)
+    # Normalize risk score (capped at 10.0)
     overall_risk = min(10.0, total_risk)
     
     logger.info(f"Analysis complete. Found {len(results)} issues. Overall Risk: {overall_risk:.1f}")
@@ -64,3 +75,4 @@ async def analyze_elements(request: AnalyzeRequest, service: InferenceService = 
         results=results,
         overall_risk_score=round(overall_risk, 1)
     )
+

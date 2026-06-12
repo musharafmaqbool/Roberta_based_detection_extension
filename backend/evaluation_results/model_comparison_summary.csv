@@ -1,0 +1,5 @@
+Metric,Dark Pattern Model,Phishing Model
+Accuracy,0.9333,0.9000
+Precision,0.9333,0.9286
+Recall,0.9333,0.8667
+F1-Score,0.9333,0.8966

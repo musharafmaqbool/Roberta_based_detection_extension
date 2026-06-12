@@ -1,55 +1,153 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <title>Sentinel Status</title>
+
     <link rel="stylesheet" href="popup.css">
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
+
+    <div class="cyber-grid"></div>
+    <div class="scan-line"></div>
+
     <div class="container">
+
+        <!-- HEADER -->
         <header>
+
             <div class="logo">
-                <span class="glitch" data-text="SENTINEL">SENTINEL</span>
+                <span class="glitch" data-text="SENTINEL">
+                    SENTINEL
+                </span>
             </div>
+
             <div class="status-indicator">
                 <span class="dot active" id="system-status-dot"></span>
-                <span id="system-status-text">Active</span>
+
+                <span id="system-status-text">
+                    Active
+                </span>
             </div>
+
         </header>
 
+        <!-- RISK METER -->
         <div class="risk-meter-container">
+
             <svg class="risk-meter" viewBox="0 0 100 50">
-                <path class="meter-bg" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke-width="8" stroke-linecap="round"/>
-                <path class="meter-fill" id="risk-arc" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke-width="8" stroke-linecap="round" stroke-dasharray="125.6" stroke-dashoffset="125.6"/>
+
+                <path class="meter-bg" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke-width="8"
+                    stroke-linecap="round" />
+
+                <path class="meter-fill" id="risk-arc" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke-width="8"
+                    stroke-linecap="round" stroke-dasharray="125.6" stroke-dashoffset="125.6" />
+
             </svg>
+
             <div class="risk-score">
-                <span id="risk-value">0.0</span>
-                <span class="risk-label">Risk Score</span>
+
+                <!-- FIXED ID -->
+                <span id="risk-score">0.0</span>
+
+                <span class="risk-label">
+                    Risk Score
+                </span>
+
             </div>
+
         </div>
 
+        <!-- STATS -->
         <div class="stats-grid">
+
             <div class="stat-box dp">
-                <div class="stat-value" id="dp-count">0</div>
-                <div class="stat-label">Dark Patterns</div>
+
+                <div class="stat-value" id="dp-count">
+                    0
+                </div>
+
+                <div class="stat-label">
+                    Dark Patterns
+                </div>
+
             </div>
+
             <div class="stat-box phish">
-                <div class="stat-value" id="phish-count">0</div>
-                <div class="stat-label">Phishing Risks</div>
+
+                <div class="stat-value" id="phish-count">
+                    0
+                </div>
+
+                <div class="stat-label">
+                    Phishing Risks
+                </div>
+
             </div>
+
         </div>
 
-        <div class="controls">
-            <div class="control-row">
-                <label for="master-toggle">Enable Sentinel</label>
-                <label class="switch">
-                    <input type="checkbox" id="master-toggle" checked>
-                    <span class="slider"></span>
-                </label>
+        <!-- RECENT DETECTIONS -->
+        <div class="recent-detections-container">
+
+            <h3 class="section-title">
+                Recent Detections
+            </h3>
+
+            <!-- FIXED ID -->
+            <div id="recent-detections" class="detections-list">
+
+                <div class="no-detections">
+                    No suspicious activity detected.
+                </div>
+
             </div>
+
         </div>
+
+        <!-- CONTROLS -->
+        <div class="controls">
+
+            <div class="control-row">
+
+                <label for="master-toggle">
+                    Enable Sentinel
+                </label>
+
+                <label class="switch">
+
+                    <input type="checkbox" id="master-toggle" checked>
+
+                    <span class="slider"></span>
+
+                </label>
+
+            </div>
+
+        </div>
+
+        <!-- FOOTER BRANDING -->
+        <footer>
+            <div class="footer-status">
+                <span class="footer-dot"></span>
+                <span>AI Protection Active</span>
+            </div>
+            <div class="footer-branding">
+                Powered by <span class="brand-text">Sentinel AI</span>
+            </div>
+            <div class="footer-subtext">
+                Real-Time Threat Intelligence &bull; v1.0
+            </div>
+        </footer>
+
     </div>
+
     <script src="popup.js"></script>
+
 </body>
+
 </html>
