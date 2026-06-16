@@ -17,11 +17,23 @@ class SentinelDOMScanner {
         this.TARGET_SELECTORS = [
             'a', 'button', 'form', 'input[type="submit"]', 'input[type="button"]',
             'dialog', '[role="dialog"]', '[role="alert"]', '[role="banner"]',
-            '.modal', '.banner', '.popup',
-            // Dark pattern content elements: paragraphs, divs, spans with inline text
-            'p', 'div.banner', 'div.offer', 'div.promo', 'div.warning',
-            'span.urgent', 'span.promo', 'span.offer'
+            '.modal', '.banner', '.popup', '.offer-box', '.promo'
         ].join(', ');
+
+        // Manipulative keywords used to pre-screen p/div/span text nodes
+        // before sending to the backend — avoids scanning every paragraph on every site.
+        this.DARK_PATTERN_TRIGGERS = [
+            'hurry', 'only', 'limited', 'last chance', 'act now',
+            'buy now', 'buy immediately', 'claim reward', 'claim now',
+            'exclusive offer', 'save money', "before it's gone",
+            'offer ends', "don't miss out", 'deal expires', 'low stock',
+            'no thanks', 'hate saving money', 'prefer paying full',
+            'time offer', 'immediately', 'price increases', 'before price',
+            'selling fast', 'almost gone', 'left in stock', 'items left',
+            'act fast', 'expires soon', 'final offer', 'one time offer',
+            'flash sale', 'clearance', 'countdown', 'limited availability'
+        ];
+
         
         console.log("🔍 [Sentinel Scanner] DOM scanner created.");
     }
@@ -133,6 +145,40 @@ class SentinelDOMScanner {
     }
 
     /**
+     * Scans all p, div, and span text nodes within a subtree for dark pattern language.
+     * Only sends elements that contain known manipulative trigger phrases.
+     * This avoids sending every paragraph on every website to the backend.
+     * @param {HTMLElement} rootNode
+     * @param {Function} onResultsCallback
+     */
+    scanDarkPatternTextNodes(rootNode, onResultsCallback) {
+        if (!rootNode || !rootNode.querySelectorAll) return;
+
+        const candidates = rootNode.querySelectorAll('p, span, div');
+        candidates.forEach(el => {
+            // Skip Sentinel UI and already-processed elements
+            if (this.isSentinelElement(el)) return;
+            if (this.processedNodes.has(el)) return;
+            if (el.dataset.sentinelId && this.nodeMap.has(el.dataset.sentinelId)) return;
+
+            // Only process leaf-like elements (no nested block children to avoid duplicates)
+            const hasBlockChildren = el.querySelector('p, div, ul, ol, table, form, button');
+            if (hasBlockChildren) return;
+
+            const rawText = (el.innerText || '').trim();
+            if (rawText.length < this.MIN_TEXT_LENGTH || rawText.length > this.MAX_TEXT_LENGTH) return;
+
+            // Pre-screen: only continue if text contains a known dark pattern trigger
+            const lower = rawText.toLowerCase();
+            const hasManipulative = this.DARK_PATTERN_TRIGGERS.some(kw => lower.includes(kw));
+            if (!hasManipulative) return;
+
+            // Use processElement to handle deduplication, hashing, batching
+            this.processElement(el, onResultsCallback);
+        });
+    }
+
+    /**
      * Recursively scans a DOM node and its children for target elements.
      * @param {HTMLElement} rootNode 
      * @param {Function} onResultsCallback 
@@ -146,7 +192,7 @@ class SentinelDOMScanner {
             return;
         }
 
-        // 1. Scan and process form containers first
+        // 1. Scan and process form containers first (phishing containers)
         const containers = this.findFormContainers(rootNode);
         containers.forEach(container => this.processPhishingContainer(container, onResultsCallback));
 
@@ -155,11 +201,14 @@ class SentinelDOMScanner {
             this.processElement(rootNode, onResultsCallback);
         }
 
-        // 3. Check all children matching our targets
+        // 3. Check all children matching our targets (buttons, links, alerts, etc.)
         if (rootNode.querySelectorAll) {
             const targets = rootNode.querySelectorAll(this.TARGET_SELECTORS);
             targets.forEach(element => this.processElement(element, onResultsCallback));
         }
+
+        // 4. Scan text nodes (p/div/span) for dark pattern keywords
+        this.scanDarkPatternTextNodes(rootNode, onResultsCallback);
     }
 
     /**
