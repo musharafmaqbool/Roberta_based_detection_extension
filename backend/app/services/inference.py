@@ -5,6 +5,7 @@ from app.services.roberta_model import roberta_service
 from app.utils.logger import get_logger
 
 logger = get_logger("PhishingInference")
+logger.info("🔍 [Inference] Entering inference.py")
 
 class InferenceService:
     def __init__(self):
@@ -100,7 +101,9 @@ class InferenceService:
             "last chance",
             "act now",
             "buy now",
+            "buy immediately",
             "claim reward",
+            "claim now",
             "exclusive offer",
             "save money",
             "before it's gone",
@@ -111,8 +114,19 @@ class InferenceService:
             "no thanks",
             "hate saving money",
             "prefer paying full price",
-            "prefer paying full"
+            "prefer paying full",
+            "time offer",
+            "immediately",
+            "price increases",
+            "before price",
+            "discount expires",
+            "selling fast",
+            "almost gone",
+            "left in stock",
+            "items left",
+            "confirm your choice"
         ]
+        logger.info("✅ [Inference] InferenceService initialized.")
 
     def _extract_domain(self, url: str) -> str:
         """
@@ -140,6 +154,9 @@ class InferenceService:
             return False
         return domain in self.TRUSTED_DOMAINS or any(domain.endswith(f".{td}") for td in self.TRUSTED_DOMAINS)
 
+    def _is_loopback(self, domain: str) -> bool:
+        return domain == "localhost" or domain == "127.0.0.1" or domain.startswith("127.") or domain == "::1"
+
     def _analyze_url_reputation(self, domain: str) -> dict:
         """
         Performs heuristic reputation scans on the domain name.
@@ -156,7 +173,8 @@ class InferenceService:
         # 1. Check if IP address
         ip_pattern = r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$'
         is_ip = bool(re.match(ip_pattern, domain))
-
+        if is_ip and self._is_loopback(domain):
+            is_ip = False
         # 2. Check for suspicious TLD
         parts = domain.split(".")
         tld = parts[-1] if len(parts) > 1 else ""
@@ -193,6 +211,8 @@ class InferenceService:
 
     async def analyze_element(self, element):
         text = element.get("text", "")
+        # Strict input truncation to prevent tokenizer hangs on large inputs
+        text = text[:512]
         url = element.get("url", "")
         element_id = element.get("id")
         tag_name = element.get("tagName", "").strip().lower()
@@ -262,8 +282,45 @@ class InferenceService:
         # HEURISTICS MATCHING
         # -----------------------------
         lower_text = text.lower()
-        has_urgency = any(phrase in lower_text for phrase in self.URGENCY_PHRASES)
-        has_credential = any(keyword in lower_text for keyword in self.CREDENTIAL_KEYWORDS)
+        
+        # Flexibly check for urgency keywords and phrases
+        urgency_keywords = ["urgent", "immediate", "suspend", "suspension", "expired", "unauthorized", "action required", "security alert", "confirm your", "verify your", "restore access"]
+        has_urgency = any(phrase in lower_text for phrase in self.URGENCY_PHRASES) or any(kw in lower_text for kw in urgency_keywords)
+        
+        # Check for account suspension language
+        suspension_keywords = ["suspended", "suspension", "suspend", "deactivated", "blocked", "restricted"]
+        has_suspension = any(word in lower_text for word in suspension_keywords)
+        
+        # Check for credential harvesting fields (including explicit password/email inputs)
+        has_credential = any(keyword in lower_text for keyword in self.CREDENTIAL_KEYWORDS) or any(w in lower_text for w in ["email", "password", "username", "login"])
+
+        # Calculate Heuristic Score Engine
+        heuristic_score = 0
+        if has_urgency:
+            heuristic_score += 2
+        if has_credential:
+            heuristic_score += 2
+        if has_suspension:
+            heuristic_score += 2
+        if "password" in lower_text:
+            heuristic_score += 2
+        if "email" in lower_text or "username" in lower_text:
+            heuristic_score += 1
+            
+        suspicious_buttons = [
+            "verify account", 
+            "secure account", 
+            "login now", 
+            "confirm identity", 
+            "restore access", 
+            "unlock account", 
+            "validate account"
+        ]
+        has_suspicious_button = any(btn in lower_text for btn in suspicious_buttons)
+        if has_suspicious_button:
+            heuristic_score += 2
+            
+        logger.info(f"📊 [HEURISTIC SCORE] Calculated score: {heuristic_score} for text: '{text[:80]}...'")
 
         # -----------------------------
         # PHISHING PREDICTION TRIGGERS
@@ -274,7 +331,17 @@ class InferenceService:
             keyword in combined_text for keyword in self.CREDENTIAL_KEYWORDS
         )
 
-        should_check_phishing = contains_phishing_keywords or is_suspicious_domain
+        # Ensure pages containing urgency language, password/email fields, or account suspension language automatically trigger phishing analysis
+        should_check_phishing = (
+            contains_phishing_keywords or 
+            is_suspicious_domain or 
+            has_urgency or 
+            has_suspension or 
+            has_credential
+        )
+
+        if should_check_phishing and (has_urgency or has_suspension or has_credential):
+            logger.info(f"🚨 [PHISHING HEURISTIC TRIGGERED] - Text: '{text[:80]}...' (Urgency: {has_urgency}, Suspension: {has_suspension}, Credential: {has_credential})")
 
         # Initialize phishing values
         phishing_result = {"prediction": 0, "confidence": 0.0}
@@ -294,108 +361,139 @@ class InferenceService:
                 is_phishing = False
                 explanation_tag = "trusted_domain_safe"
             else:
-                # Run the RoBERTa phishing model
-                # The model takes url as primary context if present, fallback to text
-                phishing_input = url if url else text
-                phishing_result = roberta_service.predict_phishing(phishing_input)
-                
-                raw_pred = phishing_result["prediction"]
-                raw_conf = phishing_result["confidence"]
+                is_escalated = False
 
-                # -----------------------------
-                # HYBRID CLASSIFICATION RULES
-                # -----------------------------
-                if is_trusted:
-                    # Stricter threshold on trusted domains
-                    trusted_threshold = 0.999
-                    if raw_pred == 1 and raw_conf >= trusted_threshold:
-                        # Even on trusted domains, extremely high confidence + urgency raises alert
-                        if has_urgency:
-                            is_phishing = True
-                            phishing_risk_level = "High Risk"
-                            explanation_tag = "trusted_domain_phish_urgency"
-                            logger.warning(
-                                f"[Phishing Detection] High confidence phishing detected on TRUSTED domain {domain}! "
-                                f"Confidence: {raw_conf:.4f}, Urgency detected."
-                            )
+                # Evaluate heuristics first before loading/running the heavy ML model
+                if not is_trusted:
+                    # Rule 1: Strong Hybrid Escalation Rule
+                    if heuristic_score >= 6 and has_urgency and has_credential:
+                        is_phishing = True
+                        phishing_risk_level = "High Risk"
+                        explanation_tag = "hybrid_escalation"
+                        phishing_result["confidence"] = 0.97
+                        is_escalated = True
+                        logger.warning(
+                            f"🚨 [HYBRID ESCALATION TRIGGERED] Heuristic score: {heuristic_score} >= 6 with urgency and credential. "
+                            f"Skipping ML model loading/inference -> Phishing High Risk."
+                        )
+
+                    # Rule 2: Explicit Heuristic-Only Phishing Rule
+                    elif has_urgency and has_credential and ("verify" in lower_text or "suspended" in lower_text or "restore access" in lower_text):
+                        is_phishing = True
+                        phishing_risk_level = "High Risk"
+                        explanation_tag = "heuristic_only_phish"
+                        phishing_result["confidence"] = 0.97
+                        is_escalated = True
+                        logger.warning(
+                            f"🚨 [HEURISTIC-ONLY PHISHING DETECTED] Urgency, Credential and key keywords matched. "
+                            f"Skipping ML model loading/inference -> Phishing High Risk."
+                        )
+
+                if not is_escalated:
+                    # Run the RoBERTa phishing model
+                    # Use text content instead of URL for local file:// URLs, otherwise use URL if present
+                    is_file_url = url.lower().startswith("file://")
+                    phishing_input = text if (is_file_url or not url) else url
+                    phishing_input = phishing_input[:512]
+                    phishing_result = roberta_service.predict_phishing(phishing_input)
+                    
+                    raw_pred = phishing_result["prediction"]
+                    raw_conf = phishing_result["confidence"]
+
+                    # -----------------------------
+                    # HYBRID CLASSIFICATION RULES
+                    # -----------------------------
+                    if is_trusted:
+                        # Stricter threshold on trusted domains
+                        trusted_threshold = 0.999
+                        if raw_pred == 1 and raw_conf >= trusted_threshold:
+                            # Even on trusted domains, extremely high confidence + urgency raises alert
+                            if has_urgency:
+                                is_phishing = True
+                                phishing_risk_level = "High Risk"
+                                explanation_tag = "trusted_domain_phish_urgency"
+                                logger.warning(
+                                    f"[Phishing Detection] High confidence phishing detected on TRUSTED domain {domain}! "
+                                    f"Confidence: {raw_conf:.4f}, Urgency detected."
+                                )
+                            else:
+                                is_phishing = False
+                                phishing_risk_level = "Low Risk"
+                                explanation_tag = "trusted_domain_low_risk"
+                                logger.info(
+                                    f"[Phishing Detection] High ML prediction on trusted domain {domain} but suppressed "
+                                    f"(No urgency detected. Credential fields alone do not trigger)."
+                                )
                         else:
                             is_phishing = False
-                            phishing_risk_level = "Low Risk"
-                            explanation_tag = "trusted_domain_low_risk"
-                            logger.info(
-                                f"[Phishing Detection] High ML prediction on trusted domain {domain} but suppressed "
-                                f"(No urgency detected. Credential fields alone do not trigger)."
+                            phishing_risk_level = "None"
+                            explanation_tag = "trusted_domain_safe"
+                    else:
+                        # Untrusted Domain Classification
+                        default_threshold = 0.95
+
+                        # Rule A: Brand spoofing detected (e.g. microsoft-verify.xyz) - Critical Indicator
+                        if reputation["spoofed_brand"] and raw_pred == 1 and raw_conf >= 0.80:
+                            is_phishing = True
+                            phishing_risk_level = "High Risk"
+                            explanation_tag = "spoofed_brand"
+                            # Boost confidence score artificially for UI representation of critical threat
+                            phishing_result["confidence"] = max(raw_conf, 0.99)
+                            logger.warning(
+                                f"🚨 [PHISHING HEURISTIC TRIGGERED] [Phishing Detection] Hybrid phishing rule triggered: Brand spoofing on {domain}! "
+                                f"ML confidence: {raw_conf:.4f}"
                             )
-                    else:
-                        is_phishing = False
-                        phishing_risk_level = "None"
-                        explanation_tag = "trusted_domain_safe"
-                else:
-                    # Untrusted Domain Classification
-                    default_threshold = 0.95
+                        
+                        # Rule B: Suspicious Domain + Credential/Urgency Keywords
+                        elif is_suspicious_domain and raw_pred == 1 and raw_conf >= 0.85 and (has_urgency or has_credential):
+                            is_phishing = True
+                            phishing_risk_level = "High Risk"
+                            explanation_tag = "suspicious_domain_hybrid"
+                            phishing_result["confidence"] = max(raw_conf, 0.98)
+                            logger.warning(
+                                f"🚨 [PHISHING HEURISTIC TRIGGERED] [Phishing Detection] Hybrid phishing rule triggered: Suspicious domain + text heuristics on {domain}! "
+                                f"ML confidence: {raw_conf:.4f}"
+                            )
 
-                    # Rule A: Brand spoofing detected (e.g. microsoft-verify.xyz) - Critical Indicator
-                    if reputation["spoofed_brand"] and raw_pred == 1 and raw_conf >= 0.80:
-                        is_phishing = True
-                        phishing_risk_level = "High Risk"
-                        explanation_tag = "spoofed_brand"
-                        # Boost confidence score artificially for UI representation of critical threat
-                        phishing_result["confidence"] = max(raw_conf, 0.99)
-                        logger.warning(
-                            f"[Phishing Detection] Hybrid phishing rule triggered: Brand spoofing on {domain}! "
-                            f"ML confidence: {raw_conf:.4f}"
-                        )
-                    
-                    # Rule B: Suspicious Domain + Credential/Urgency Keywords
-                    elif is_suspicious_domain and raw_pred == 1 and raw_conf >= 0.85 and (has_urgency or has_credential):
-                        is_phishing = True
-                        phishing_risk_level = "High Risk"
-                        explanation_tag = "suspicious_domain_hybrid"
-                        phishing_result["confidence"] = max(raw_conf, 0.98)
-                        logger.warning(
-                            f"[Phishing Detection] Hybrid phishing rule triggered: Suspicious domain + text heuristics on {domain}! "
-                            f"ML confidence: {raw_conf:.4f}"
-                        )
+                        # Rule C: General Urgency + Credentials combo on normal untrusted domain
+                        elif raw_pred == 1 and raw_conf >= 0.88 and has_urgency and has_credential:
+                            is_phishing = True
+                            phishing_risk_level = "High Risk"
+                            explanation_tag = "urgency_credentials_hybrid"
+                            phishing_result["confidence"] = max(raw_conf, 0.96)
+                            logger.warning(
+                                f"🚨 [PHISHING HEURISTIC TRIGGERED] [Phishing Detection] Hybrid phishing rule triggered: Urgency + Credential harvest combo on {domain}! "
+                                f"ML confidence: {raw_conf:.4f}"
+                            )
 
-                    # Rule C: General Urgency + Credentials combo on normal untrusted domain
-                    elif raw_pred == 1 and raw_conf >= 0.88 and has_urgency and has_credential:
-                        is_phishing = True
-                        phishing_risk_level = "High Risk"
-                        explanation_tag = "urgency_credentials_hybrid"
-                        phishing_result["confidence"] = max(raw_conf, 0.96)
-                        logger.warning(
-                            f"[Phishing Detection] Hybrid phishing rule triggered: Urgency + Credential harvest combo on {domain}! "
-                            f"ML confidence: {raw_conf:.4f}"
-                        )
+                        # Rule D: Direct High Confidence ML Match
+                        elif raw_pred == 1 and raw_conf >= default_threshold:
+                            is_phishing = True
+                            phishing_risk_level = "High Risk"
+                            explanation_tag = "high_confidence_ml"
+                            logger.warning(
+                                f"[Phishing Detection] High confidence phishing detected on {domain}! "
+                                f"Confidence: {raw_conf:.4f}"
+                            )
 
-                    # Rule D: Direct High Confidence ML Match
-                    elif raw_pred == 1 and raw_conf >= default_threshold:
-                        is_phishing = True
-                        phishing_risk_level = "High Risk"
-                        explanation_tag = "high_confidence_ml"
-                        logger.warning(
-                            f"[Phishing Detection] High confidence phishing detected on {domain}! "
-                            f"Confidence: {raw_conf:.4f}"
-                        )
+                        # Rule E: Moderate confidence without urgency (Medium Risk, no visual highlight)
+                        elif raw_pred == 1 and raw_conf >= 0.80:
+                            is_phishing = False
+                            phishing_risk_level = "Medium Risk"
+                            explanation_tag = "medium_risk"
+                            logger.info(
+                                f"[Phishing Detection] Medium Risk phishing logged on {domain} (Confidence: {raw_conf:.4f}). "
+                                f"Not visually highlighted."
+                            )
 
-                    # Rule E: Moderate confidence without urgency (Medium Risk, no visual highlight)
-                    elif raw_pred == 1 and raw_conf >= 0.80:
-                        is_phishing = False
-                        phishing_risk_level = "Medium Risk"
-                        explanation_tag = "medium_risk"
-                        logger.info(
-                            f"[Phishing Detection] Medium Risk phishing logged on {domain} (Confidence: {raw_conf:.4f}). "
-                            f"Not visually highlighted."
-                        )
-
-                    # Rule F: Low confidence
-                    elif raw_pred == 1 and raw_conf >= 0.50:
-                        is_phishing = False
-                        phishing_risk_level = "Low Risk"
-                        explanation_tag = "low_risk"
-                    else:
-                        is_phishing = False
-                        phishing_risk_level = "None"
+                        # Rule F: Low confidence
+                        elif raw_pred == 1 and raw_conf >= 0.50:
+                            is_phishing = False
+                            phishing_risk_level = "Low Risk"
+                            explanation_tag = "low_risk"
+                        else:
+                            is_phishing = False
+                            phishing_risk_level = "None"
         else:
             # No keywords or domain triggers
             phishing_risk_level = "None"
@@ -461,6 +559,10 @@ class InferenceService:
 
         # 2. Phishing
         if category == "phishing":
+            if explanation_tag == "hybrid_escalation":
+                return "Urgency-based social engineering + credential harvesting detected [HYBRID]"
+            if explanation_tag == "heuristic_only_phish":
+                return "Urgency-based social engineering + credential harvesting detected [HEURISTIC]"
             if explanation_tag == "spoofed_brand":
                 return "Potential domain spoofing attempt detected"
             if explanation_tag == "trusted_domain_phish_urgency":
