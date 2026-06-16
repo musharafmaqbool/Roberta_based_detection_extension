@@ -2,7 +2,7 @@ import { SentinelStorage } from '../services/storage.js';
 
 console.log("⚙️ [Sentinel Background] Initializing service worker...");
 
-const BACKEND_URL = "http://localhost:8000/analyze";
+const BACKEND_URL = "http://127.0.0.1:8000/analyze";
 
 /**
  * Sends a batch of elements to the FastAPI backend
@@ -55,6 +55,27 @@ async function analyzeWithBackend(payload) {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     try {
+
+        // RESET STATS REQUEST
+        if (request.action === "reset_stats") {
+            const tabId = sender.tab?.id;
+            if (tabId) {
+                SentinelStorage.saveTabStats(tabId, {
+                    dpCount: 0,
+                    phishCount: 0,
+                    overallRisk: 0,
+                    recentDetections: []
+                }).then(() => {
+                    sendResponse({ success: true });
+                }).catch(err => {
+                    console.error("Error resetting stats:", err);
+                    sendResponse({ error: err.message });
+                });
+            } else {
+                sendResponse({ error: "No tab ID found" });
+            }
+            return true;
+        }
 
         // ANALYZE REQUEST
         if (request.action === "analyze") {

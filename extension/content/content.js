@@ -31,6 +31,15 @@ function initializeSentinel() {
         const messaging = window.SentinelMessaging;
         const batching = new window.SentinelBatching(messaging);
 
+        // Reset stats for the current tab on load/reload
+        try {
+            messaging.sendMessage({ action: "reset_stats" })
+                .then(res => console.log("🧹 [Sentinel Content] Successfully reset tab stats on initialization:", res))
+                .catch(err => console.error("⚠️ [Sentinel Content] Failed to reset tab stats on initialization:", err));
+        } catch (e) {
+            console.error("⚠️ [Sentinel Content] Error calling reset_stats:", e);
+        }
+
         // 3. Initialize Core Scanner
         const domScanner = new window.SentinelDOMScanner(
             batching,
@@ -48,6 +57,9 @@ function initializeSentinel() {
                 results.forEach(result => {
                     const element = domScanner.getNode(result.id);
                     if (element) {
+                        if (result.is_phishing) {
+                            console.warn(`🚨 [Sentinel Content] [PHISHING PAGE DETECTED] Phishing detected for ID: ${result.id}`);
+                        }
                         uiManager.processElement(element, result);
                     } else {
                         console.error("❌ [Sentinel Content] Element not found in nodeMap for ID:", result.id);

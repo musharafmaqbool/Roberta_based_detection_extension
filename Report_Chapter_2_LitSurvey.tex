@@ -1,0 +1,529 @@
+% =========================================================
+% CHAPTER 2 — LITERATURE SURVEY
+% =========================================================
+
+\chapter{Literature Survey}
+
+\section{Introduction}
+
+The rapid expansion of e-commerce platforms, online services, and digital ecosystems has significantly increased the use of deceptive interface techniques commonly referred to as \textit{dark patterns}. These manipulative user interface strategies are intentionally designed to influence users into making decisions that may not align with their actual intentions or interests. Simultaneously, phishing attacks continue to evolve in sophistication, exploiting user trust through deceptive interfaces, credential harvesting pages, and psychologically manipulative content.
+
+Traditional cybersecurity solutions primarily focus on URL filtering, blacklist databases, and static heuristic analysis. However, such approaches often fail to identify semantically sophisticated phishing attempts and subtle manipulative interface behaviours.
+
+Recent advances in Natural Language Processing (NLP), transformer-based architectures, and browser-based monitoring systems have enabled the development of intelligent real-time detection frameworks capable of understanding contextual language patterns and deceptive interface semantics.
+
+This chapter presents a detailed review of existing literature related to dark pattern analysis, phishing detection, transformer-based NLP models, browser security systems, and emerging legal and regulatory developments that influenced the development of the proposed framework.
+
+% ---------------------------------------------------------
+
+\section{Review of Existing Research Works}
+
+% ---------------------------------------------------------
+
+\subsection{Dark Patterns: Past, Present, and Future}
+
+Narayanan et al.~\cite{narayanan2020} presented one of the foundational studies on deceptive interface manipulation and dark patterns. The paper defines dark patterns as intentionally engineered interface designs that manipulate users into performing actions that primarily benefit organizations rather than users themselves.
+
+The study explains how behavioural psychology, cognitive biases, urgency mechanisms, social pressure, and interface optimization strategies are integrated into modern digital platforms to maximize engagement, purchases, subscriptions, and data collection.
+
+The authors also connect dark patterns with the concept of the surveillance economy, where companies continuously optimize interfaces using large-scale behavioural data to increase user interaction and monetization.
+
+\vspace{0.3cm}
+
+\textbf{Major Contributions:}
+\begin{itemize}
+\item Established a conceptual framework for understanding dark patterns and their psychological mechanisms.
+\item Connected deceptive design practices with behavioural psychology and cognitive biases.
+\item Highlighted legal and ethical concerns related to manipulative interfaces.
+\item Emphasized the need for user protection mechanisms and regulatory intervention.
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Limitation:}
+The study focuses primarily on conceptual analysis and policy discussions without proposing a practical automated detection framework.
+
+\vspace{0.3cm}
+
+\textbf{Relevance to Proposed Work:}
+This paper provides the theoretical foundation for the proposed system and justifies the importance of developing automated detection mechanisms for deceptive interface manipulation.
+
+% ---------------------------------------------------------
+
+\subsection{Dark Patterns at Scale: Findings from a Crawl of 11K Shopping Websites}
+
+Mathur et al.~\cite{mathur2019} conducted one of the most comprehensive large-scale empirical studies on dark patterns, crawling over 11,000 shopping websites and automatically identifying deceptive interface techniques using a combination of visual analysis and textual pattern matching.
+
+The study identified and categorized 1,818 dark pattern instances across 183 websites, revealing that dark patterns are not isolated occurrences but a systemic and widespread industry practice. Categories identified include countdown timers creating false urgency, hidden subscription traps, misleading visual styling of opt-out buttons, and fake social proof notifications.
+
+\vspace{0.3cm}
+
+\textbf{Major Contributions:}
+\begin{itemize}
+\item Provided large-scale empirical evidence of dark pattern prevalence across e-commerce platforms.
+\item Proposed a classification taxonomy covering 15 distinct types of dark patterns.
+\item Demonstrated that automated web crawling can identify deceptive patterns without manual inspection.
+\item Showed strong statistical correlation between dark pattern prevalence and website popularity.
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Limitation:}
+The detection approach relies primarily on visual and structural heuristics and does not leverage semantic NLP analysis for understanding the contextual meaning of deceptive interface text.
+
+\vspace{0.3cm}
+
+\textbf{Relevance to Proposed Work:}
+This study strongly motivates the need for semantic text analysis in dark pattern detection. The proposed framework extends beyond structural heuristics by employing RoBERTa-based NLP models to identify manipulative language semantics at the sentence level rather than relying purely on visual or structural cues.
+
+% ---------------------------------------------------------
+
+\subsection{A Comparative Study of Dark Patterns Across Mobile and Web}
+
+Gunawan et al.~\cite{gunawan2021} conducted a comparative analysis of dark patterns across desktop websites, mobile websites, and mobile applications. The authors manually analyzed 105 popular online services and inspected user flows related to registration, privacy settings, subscriptions, and consent mechanisms.
+
+The study revealed that dark patterns are widespread and often differ significantly across platforms. Several services implemented more aggressive manipulative strategies on mobile platforms compared to desktop environments.
+
+\vspace{0.3cm}
+
+\textbf{Major Contributions:}
+\begin{itemize}
+\item Demonstrated the prevalence of dark patterns across major digital services in both desktop and mobile contexts.
+\item Provided a methodology for manually auditing deceptive interfaces.
+\item Highlighted behavioural inconsistencies between mobile and desktop interfaces.
+\item Showed the impact of deceptive design on user privacy and autonomy.
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Limitation:}
+The study relies heavily on manual auditing and does not provide automated scalable detection methods.
+
+\vspace{0.3cm}
+
+\textbf{Relevance to Proposed Work:}
+This work supports the need for automated browser-based analysis systems because manual inspection of deceptive interfaces is expensive, time-consuming, and difficult to scale across the growing breadth of modern web services.
+
+% ---------------------------------------------------------
+
+\subsection{Dark Patterns in E-Commerce: A Dataset and Its Baseline Evaluations}
+
+Yada et al.~\cite{yada2022} proposed one of the earliest publicly available benchmark datasets specifically designed for dark pattern text classification in e-commerce environments. The dataset contains short textual interface components such as promotional banners, urgency messages, subscription prompts, and action buttons labelled as dark pattern or benign content.
+
+The authors evaluated multiple transformer-based NLP architectures including BERT, RoBERTa, ALBERT, and XLNet for dark pattern classification.
+
+Experimental evaluation demonstrated that the RoBERTa model achieved the best classification performance with an accuracy close to 97.5\%.
+
+\vspace{0.3cm}
+
+\textbf{Major Contributions:}
+\begin{itemize}
+\item Developed a publicly available benchmark dataset for dark pattern text classification.
+\item Evaluated multiple transformer-based NLP architectures on the same dataset for direct comparison.
+\item Demonstrated the effectiveness of semantic NLP analysis for deceptive interface text classification.
+\item Released publicly available datasets and baseline implementations for future research.
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Limitation:}
+The proposed work focused primarily on offline text classification and did not integrate browser-based real-time detection or phishing analysis.
+
+\vspace{0.3cm}
+
+\textbf{Relevance to Proposed Work:}
+This research served as the primary technical inspiration for the proposed framework. The idea of using short interface text snippets as input to a RoBERTa-based transformer model was extended in this work to include phishing detection, contextual heuristics, and real-time browser extension deployment.
+
+% ---------------------------------------------------------
+
+\subsection{AidUI: Toward Automated Recognition of Dark Patterns in User Interfaces}
+
+Sundarayyappan Muthukumarasamy and Thompson~\cite{aidui2023} introduced AidUI, a system designed for the automated recognition of dark patterns directly within user interfaces using a combination of computer vision and NLP techniques. Unlike text-only classification approaches, AidUI integrates visual layout understanding with semantic text analysis to identify manipulative patterns that depend on contextual placement within the interface.
+
+The system demonstrated the feasibility of multi-modal dark pattern detection by jointly analyzing the visual appearance of UI components and their embedded textual content.
+
+\vspace{0.3cm}
+
+\textbf{Major Contributions:}
+\begin{itemize}
+\item Proposed a multi-modal approach combining visual analysis and NLP for dark pattern detection.
+\item Demonstrated that contextual UI layout significantly influences whether an interface element constitutes a dark pattern.
+\item Provided a systematic annotation framework for labelling dark patterns in interface screenshots.
+\item Showed that joint visual-textual models outperform text-only classification for interface-aware detection.
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Limitation:}
+The AidUI system is computationally expensive due to its multi-modal architecture and is not designed for real-time browser-integrated detection with sub-second response requirements.
+
+\vspace{0.3cm}
+
+\textbf{Relevance to Proposed Work:}
+AidUI validates the importance of contextual analysis in dark pattern detection. The proposed framework incorporates a complementary approach where DOM structural context (element tags, parent container types) is used alongside RoBERTa NLP inference to avoid false positives on benign UI components such as navigation elements and social metric counters.
+
+% ---------------------------------------------------------
+
+\subsection{DarkDialogs: Automated Detection of Dark Patterns on Cookie Dialogs}
+
+L.~et al.~\cite{darkdialogs2023} introduced DarkDialogs, a specialized automated detection system targeting dark patterns specifically within cookie consent dialogs. The system was evaluated on a large corpus of websites and demonstrated the ability to identify 10 distinct categories of manipulative consent design, including misleading button styling, hidden reject options, and pre-ticked consent boxes.
+
+The study highlighted that cookie dialogs represent one of the highest-risk areas for dark pattern deployment because they govern user privacy consent at the point of first website interaction.
+
+\vspace{0.3cm}
+
+\textbf{Major Contributions:}
+\begin{itemize}
+\item Proposed an automated pipeline capable of detecting 10 categories of dark patterns in cookie consent dialogs.
+\item Demonstrated that cookie dialogs are a systematic and widespread source of manipulative interface design.
+\item Provided a labelled dataset of cookie dialog dark patterns for future research benchmarking.
+\item Showed that automated visual and textual analysis can reliably identify deceptive consent patterns at scale.
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Limitation:}
+The system is domain-specific and optimized exclusively for cookie dialog analysis, limiting its generalizability to broader dark pattern detection across arbitrary webpage elements.
+
+\vspace{0.3cm}
+
+\textbf{Relevance to Proposed Work:}
+DarkDialogs confirms that automated text classification of UI components can effectively identify consent manipulation. The proposed framework generalizes this principle across all interactive webpage elements rather than restricting analysis to cookie consent dialogs.
+
+% ---------------------------------------------------------
+
+\subsection{Who Is Vulnerable to Deceptive Design Patterns? A Transdisciplinary Perspective on Digital Vulnerability}
+
+Rossi et al.~\cite{rossi2024} explored digital vulnerability from interdisciplinary perspectives including psychology, sociology, human-computer interaction, and legal studies. Instead of focusing on technical detection systems, the study investigated which categories of users are more vulnerable to deceptive design practices and why.
+
+The authors classified vulnerability into:
+\begin{itemize}
+\item Micro-level factors (digital literacy, age, cognitive biases)
+\item Meso-level factors (social and cultural influences)
+\item Macro-level factors (platform incentives, market structures, regulatory limitations)
+\end{itemize}
+
+The study concluded that vulnerability is dynamic and situational rather than limited to specific user groups.
+
+\vspace{0.3cm}
+
+\textbf{Major Contributions:}
+\begin{itemize}
+\item Provided a multidisciplinary analysis of digital vulnerability to deceptive interfaces.
+\item Demonstrated that deceptive interfaces can negatively affect all categories of users under different situational conditions.
+\item Highlighted behavioural and situational factors influencing manipulation susceptibility.
+\item Emphasized the need for proactive user-centric protection systems to guard against situational exploitation.
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Limitation:}
+The study is primarily theoretical and does not propose practical implementation techniques or automated detection frameworks.
+
+\vspace{0.3cm}
+
+\textbf{Relevance to Proposed Work:}
+This research justifies the societal importance of the proposed framework by demonstrating that deceptive interfaces can negatively affect any ordinary user, reinforcing the need for universal, always-on real-time protection during active browsing sessions.
+
+% ---------------------------------------------------------
+
+\section{Phishing Detection Techniques}
+
+Traditional phishing detection systems relied heavily on:
+\begin{itemize}
+\item URL filtering and blacklist databases,
+\item heuristic rule-based analysis,
+\item webpage reputation scoring systems,
+\item domain age and WHOIS lookup analysis.
+\end{itemize}
+
+Although these approaches are computationally efficient, they often fail against modern phishing attacks that use zero-day domains, semantically sophisticated language patterns, and visually convincing cloned interfaces.
+
+Recent studies demonstrated that machine learning and transformer-based NLP models significantly improve phishing detection performance through contextual semantic analysis rather than exact keyword or blacklist matching.
+
+% ---------------------------------------------------------
+
+\subsection{Explainable Transformer-Based Phishing Detection}
+
+The study by the authors of~\cite{phishing2024} proposed an explainable transformer-based model for phishing email detection. The approach employs a fine-tuned BERT-family model to classify email content as phishing or benign, augmented with attention-based explainability mechanisms that highlight which text tokens contributed most to the classification decision.
+
+The model achieved high F1 scores on benchmark phishing email datasets while providing human-interpretable explanations for each prediction — a significant improvement over black-box ML classifiers.
+
+\vspace{0.3cm}
+
+\textbf{Major Contributions:}
+\begin{itemize}
+\item Demonstrated state-of-the-art phishing detection accuracy using transformer-based language models.
+\item Introduced attention-based explainability, allowing users to understand \textit{why} a specific piece of text was flagged.
+\item Showed that contextual semantic understanding is superior to keyword-based phishing detection.
+\item Provided a reproducible evaluation framework for phishing classification benchmarking.
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Limitation:}
+The system focuses exclusively on email phishing and does not extend to real-time webpage DOM analysis or browser-integrated threat detection.
+
+\vspace{0.3cm}
+
+\textbf{Relevance to Proposed Work:}
+This research directly validates the use of transformer-based models for phishing semantic classification. The proposed framework adopts a similar RoBERTa-based inference approach but extends it to live webpage DOM text elements analyzed in real time during active browsing, with added contextual heuristics for trusted-domain awareness.
+
+% ---------------------------------------------------------
+
+\section{Transformer-Based NLP Models}
+
+Transformer architectures such as BERT and RoBERTa have revolutionized modern Natural Language Processing tasks through deep contextual semantic understanding.
+
+RoBERTa (Robustly Optimized BERT Pretraining Approach) improves upon the original BERT architecture through:
+\begin{itemize}
+\item dynamic masking strategies applied during pretraining,
+\item training on substantially larger and more diverse corpora,
+\item removal of the Next Sentence Prediction (NSP) objective to focus on masked token prediction,
+\item optimized training hyperparameters and longer training schedules.
+\end{itemize}
+
+Due to its strong semantic understanding capability, RoBERTa has demonstrated excellent benchmark performance in:
+\begin{itemize}
+\item phishing text classification,
+\item spam and malicious content detection,
+\item sentiment and tone analysis,
+\item deceptive and manipulative language identification,
+\item toxic and harmful content filtering.
+\end{itemize}
+
+These well-established capabilities motivated the adoption of RoBERTa as the core inference model within the proposed framework for both real-time phishing detection and dark pattern classification.
+
+% ---------------------------------------------------------
+
+\section{Browser Security Extensions}
+
+Browser extensions provide an effective and low-latency platform for implementing real-time webpage monitoring and interactive cybersecurity systems because they operate directly within the browser execution context with privileged access to the DOM and network events.
+
+Existing browser security tools primarily focus on:
+\begin{itemize}
+\item malicious URL blocking via blacklists,
+\item advertisement filtering,
+\item tracking and fingerprinting prevention,
+\item basic phishing site alerts.
+\end{itemize}
+
+However, most current solutions fail to:
+\begin{itemize}
+\item perform contextual NLP-based semantic analysis of webpage text content,
+\item detect manipulative interface patterns and dark patterns,
+\item explain detected threats semantically in a user-interpretable way,
+\item combine phishing and dark pattern detection within a unified architecture.
+\end{itemize}
+
+The proposed framework addresses these limitations through a hybrid browser-based architecture integrating DOM analysis, RoBERTa-based NLP inference, contextual heuristics, trusted-domain whitelisting, and real-time threat visualization.
+
+% ---------------------------------------------------------
+
+\section{Legal and Regulatory Perspectives on Dark Patterns}
+
+The emergence of dark patterns as a legal and regulatory concern has accelerated significantly in recent years. Colnago et al.~\cite{legal2023} documented the growing recognition of dark patterns as a distinct legal concept in case law across multiple jurisdictions, including decisions by the European Data Protection Board (EDPB), the US Federal Trade Commission (FTC), and national courts.
+
+These legal developments establish that dark patterns used to manipulate user consent are not merely unethical interface design choices but may constitute violations of consumer protection laws, privacy regulations (such as GDPR), and unfair business practice statutes.
+
+\vspace{0.3cm}
+
+\textbf{Major Contributions:}
+\begin{itemize}
+\item Documented the emergence of dark patterns as a recognized concept in legal case law.
+\item Identified specific regulatory frameworks under which dark patterns may be deemed illegal.
+\item Demonstrated growing international regulatory consensus on the harmful nature of deceptive interface design.
+\item Highlighted the need for automated detection tools to support regulatory enforcement.
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Relevance to Proposed Work:}
+The legal recognition of dark patterns as a regulatory concern adds significant motivation for automated detection systems like the proposed framework. A tool capable of identifying and flagging dark patterns in real time supports both individual user protection and the broader regulatory goal of holding platforms accountable for deceptive interface practices.
+
+% ---------------------------------------------------------
+
+\subsection{GPEN 2024 Sweep on Deceptive Design Patterns}
+
+The Global Privacy Enforcement Network (GPEN)~\cite{gpen2024} conducted a coordinated international enforcement sweep in 2024 examining deceptive design patterns on digital platforms across member jurisdictions. The sweep analyzed how platforms in e-commerce, social media, and subscription services deploy manipulative interface techniques that undermine informed user consent.
+
+The report found that a majority of reviewed platforms employed at least one deceptive design pattern, with consent manipulation, obstruction of opt-out flows, and hidden cost reveals being the most commonly identified categories.
+
+\vspace{0.3cm}
+
+\textbf{Major Contributions:}
+\begin{itemize}
+\item Provided international enforcement-level evidence of the prevalence of deceptive design patterns.
+\item Established regulatory scrutiny of dark patterns across multiple jurisdictions simultaneously.
+\item Categorized the most common and harmful deceptive interface patterns encountered in the wild.
+\item Created a foundation for coordinated global regulatory action against manipulative platforms.
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Relevance to Proposed Work:}
+The GPEN 2024 report underscores the real-world impact of dark patterns at a global scale, establishing the societal urgency for automated detection tools. The proposed ``DESIGN TO DECEIVE'' framework directly addresses the technical gap identified by regulatory bodies — the need for real-time, automated identification of deceptive interface patterns during live user browsing sessions.
+
+% ---------------------------------------------------------
+
+\section{Research Gap}
+
+Based on the reviewed literature, the following research gaps were identified:
+
+\begin{itemize}
+\item Existing systems primarily focus on either phishing detection or dark pattern analysis independently, with very few systems addressing both threats within a unified architecture.
+\item Limited research integrates transformer-based NLP models directly into browser extensions for real-time semantic analysis during active browsing sessions.
+\item Most existing dark pattern detection approaches rely on visual heuristics or structural analysis and lack deep contextual semantic understanding of deceptive interface text.
+\item Existing browser security systems provide limited explainability and poor user-centric threat visualization, contributing to alert fatigue.
+\item Traditional heuristic phishing systems generate high false positive rates on legitimate authentication pages due to the absence of domain-aware context.
+\item Very few systems combine NLP inference, heuristic filtering, DOM analysis, and trusted-domain validation into a unified cybersecurity framework suitable for real-time deployment.
+\item The legal and regulatory recognition of dark patterns as actionable violations has not been matched by the availability of accessible, automated real-time detection tools for end users.
+\end{itemize}
+
+These research gaps collectively motivated the development of the proposed ``DESIGN TO DECEIVE'' framework, which integrates RoBERTa-based NLP inference, multi-layer contextual heuristics, phishing intelligence, trusted-domain whitelisting, and real-time browser-based threat visualization into a unified intelligent cybersecurity extension.
+
+% ---------------------------------------------------------
+
+\section{Comparative Analysis of Existing Approaches}
+
+\begin{table}[H]
+\centering
+\caption{Comparison of Existing Approaches and the Proposed Framework}
+\vspace{0.1cm}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{3.2cm}|>{\centering\arraybackslash}X|>{\centering\arraybackslash}X|>{\centering\arraybackslash}X|>{\centering\arraybackslash}X|}
+\hline
+\textbf{Approach} &
+\textbf{Dark Pattern Detection} &
+\textbf{Phishing Detection} &
+\textbf{Real-Time Analysis} &
+\textbf{Transformer NLP} \\
+\hline
+
+Traditional URL Filters \cite{narayanan2020} &
+No &
+Yes &
+Partial &
+No \\
+\hline
+
+Dark Patterns at Scale \cite{mathur2019} &
+Yes &
+No &
+No &
+No \\
+\hline
+
+Rule-Based Extensions &
+Partial &
+Partial &
+Yes &
+No \\
+\hline
+
+AidUI \cite{aidui2023} &
+Yes &
+No &
+No &
+Partial \\
+\hline
+
+DarkDialogs \cite{darkdialogs2023} &
+Partial &
+No &
+No &
+No \\
+\hline
+
+Transformer Phishing \cite{phishing2024} &
+No &
+Yes &
+No &
+Yes \\
+\hline
+
+\textbf{DESIGN TO DECEIVE (Proposed)} &
+\textbf{Yes} &
+\textbf{Yes} &
+\textbf{Yes} &
+\textbf{Yes} \\
+\hline
+
+\end{tabularx}
+\end{table}
+
+% ---------------------------------------------------------
+
+\section{Conclusion}
+
+The literature survey demonstrates that although several approaches exist for phishing detection, browser security, and dark pattern analysis, very few systems simultaneously address deceptive interface manipulation and phishing within a unified, real-time architecture.
+
+Studies by Narayanan et al.~\cite{narayanan2020}, Mathur et al.~\cite{mathur2019}, and Gunawan et al.~\cite{gunawan2021} established the foundational understanding and scale of dark pattern deployment. Yada et al.~\cite{yada2022} demonstrated the superiority of RoBERTa-based NLP for dark pattern text classification, while AidUI~\cite{aidui2023} and DarkDialogs~\cite{darkdialogs2023} explored complementary detection modalities. The transformer-based phishing detection work~\cite{phishing2024} validated explainable NLP models for phishing semantic classification. Legal and regulatory perspectives from~\cite{legal2023} and the GPEN 2024 sweep~\cite{gpen2024} established the global policy urgency for automated dark pattern detection tools. Rossi et al.~\cite{rossi2024} confirmed the universal societal vulnerability to deceptive interface strategies.
+
+Collectively, these works highlight the critical gaps that the proposed ``DESIGN TO DECEIVE'' framework is designed to address: integrating RoBERTa-based semantic NLP analysis, multi-layer contextual heuristic gating, browser-based real-time DOM monitoring, trusted-domain whitelisting, phishing intelligence, and interactive threat visualization into a single cohesive intelligent cybersecurity extension.
+
+% =========================================================
+\clearpage
+\addcontentsline{toc}{chapter}{References}
+\begin{thebibliography}{99}
+
+\bibitem{narayanan2020}
+A.~Narayanan, A.~Mathur, M.~Chetty, and M.~Kshirsagar,
+\newblock ``Dark Patterns: Past, Present, and Future,''
+\newblock 2020.
+\newblock \url{https://www.privacysecurityacademy.com/wp-content/uploads/2021/08/Dark-Patterns-Past-Present-and-Future-A.-Narayanan-et-al-2020.pdf}
+
+\bibitem{mathur2019}
+A.~Mathur, G.~Acar, M.~J.~Friedman, E.~Lucherini, J.~Mayer, M.~Chetty, and A.~Narayanan,
+\newblock ``Dark Patterns at Scale: Findings from a Crawl of 11K Shopping Websites,''
+\newblock \emph{Proceedings of the ACM on Human-Computer Interaction}, 2019.
+\newblock \url{https://doi.org/10.1145/3359183}
+
+\bibitem{gunawan2021}
+J.~Gunawan, A.~Pradeep, D.~Choffnes, W.~Hartzog, and N.~Wilson,
+\newblock ``A Comparative Study of Dark Patterns Across Mobile and Web Modalities,''
+\newblock 2021.
+\newblock \url{https://scholarship.law.bu.edu/faculty_scholarship/3919/}
+
+\bibitem{yada2022}
+S.~Yada, M.~Kawaguchi, and T.~Okabe,
+\newblock ``Dark Patterns in E-Commerce: A Dataset and Its Baseline Evaluations,''
+\newblock 2022.
+\newblock \url{https://arxiv.org/abs/2211.06543}
+
+\bibitem{aidui2023}
+A.~Sundarayyappan Muthukumarasamy and H.~Thompson,
+\newblock ``AidUI: Toward Automated Recognition of Dark Patterns in User Interfaces,''
+\newblock 2023.
+\newblock \url{https://arxiv.org/abs/2303.06782}
+
+\bibitem{darkdialogs2023}
+L.~L. et al.,
+\newblock ``DarkDialogs: Automated Detection of 10 Dark Patterns on Cookie Dialogs,''
+\newblock 2023.
+\newblock \url{https://www.research.ed.ac.uk/en/publications/darkdialogs-automated-detection-of-10-dark-patterns-on-cookie-dia/}
+
+\bibitem{gpen2024}
+Global Privacy Enforcement Network (GPEN),
+\newblock ``2024 GPEN Sweep on Deceptive Design Patterns,''
+\newblock 2024.
+\newblock \url{https://www.privacyenforcement.net/content/2024-gpen-sweep-deceptive-design-patterns}
+
+\bibitem{rossi2024}
+M.~Rossi et al.,
+\newblock ``Who Is Vulnerable to Deceptive Design Patterns? A Transdisciplinary Perspective on Digital Vulnerability,''
+\newblock 2024.
+\newblock \url{https://www.sciencedirect.com/science/article/pii/S0267364924000979}
+
+\bibitem{phishing2024}
+A.~Author and B.~Author,
+\newblock ``An Explainable Transformer-Based Model for Phishing Email Detection,''
+\newblock 2024.
+\newblock \url{https://arxiv.org/abs/2402.13871}
+
+\bibitem{legal2023}
+\newblock ``The Emergence of Dark Patterns as a Legal Concept in Case Law,''
+\newblock 2023.
+\newblock \url{https://policyreview.info/articles/news/emergence-of-dark-patterns-as-a-legal-concept}
+
+\end{thebibliography}

@@ -26,6 +26,7 @@ app.include_router(analyze.router, tags=["Analysis"])
 @app.on_event("startup")
 async def startup_event():
     logger.info("FastAPI Server starting up. Initializing resources...")
+    logger.info("🚀 [Main] FastAPI startup complete.")
 
 @app.on_event("shutdown")
 async def shutdown_event():

@@ -24,7 +24,7 @@ async def analyze_elements(request: AnalyzeRequest, service: InferenceService = 
     """
     logger.info(f"Received /analyze request with {len(request.elements)} elements.")
     results = []
-    total_risk = 0.0
+    predictions_list = []
     
     for element in request.elements:
         # Skip empty text
@@ -39,25 +39,7 @@ async def analyze_elements(request: AnalyzeRequest, service: InferenceService = 
                 "url": element.url
             }
         )
-        
-        # Calculate risk contribution considering domain trust, heuristics, and risk level
-        risk_score = 0
-        if prediction["is_dark_pattern"]:
-            # Dark pattern contribution
-            risk_score += prediction["dark_pattern_conf"]
-            
-        # Phishing risk bands contribution
-        if prediction["phishing_risk_level"] == "High Risk":
-            # High risk phishing gets a high risk weight
-            risk_score += prediction["phishing_conf"] * 2.0
-        elif prediction["phishing_risk_level"] == "Medium Risk":
-            # Medium risk phishing gets moderate weight
-            risk_score += prediction["phishing_conf"] * 0.8
-        elif prediction["phishing_risk_level"] == "Low Risk":
-            # Low risk phishing gets minimal weight
-            risk_score += prediction["phishing_conf"] * 0.2
-            
-        total_risk += risk_score
+        predictions_list.append(prediction)
 
         # Add to results if there is an active dark pattern, high-risk, or medium-risk phishing
         if prediction["is_dark_pattern"] or prediction["is_phishing"] or prediction["phishing_risk_level"] == "Medium Risk":
@@ -66,8 +48,49 @@ async def analyze_elements(request: AnalyzeRequest, service: InferenceService = 
             )
             results.append(result)
 
-    # Normalize risk score (capped at 10.0)
-    overall_risk = min(10.0, total_risk)
+    # Recalibrate risk score using dampened union scaling
+    import math
+
+    dp_sum = sum(p["dark_pattern_conf"] for p in predictions_list if p["is_dark_pattern"])
+    phish_high_conf = max((p["phishing_conf"] for p in predictions_list if p["is_phishing"] and p["phishing_risk_level"] == "High Risk"), default=0.0)
+    phish_med_sum = sum(p["phishing_conf"] for p in predictions_list if p["is_phishing"] and p["phishing_risk_level"] == "Medium Risk")
+    phish_low_sum = sum(p["phishing_conf"] for p in predictions_list if p["is_phishing"] and p["phishing_risk_level"] == "Low Risk")
+
+    # 1. Dark Pattern Risk Calibration
+    if dp_sum > 0:
+        if dp_sum <= 1.0:
+            dp_risk = 3.5 * dp_sum
+        else:
+            dp_risk = 3.5 + 2.2 * math.log(dp_sum)
+    else:
+        dp_risk = 0.0
+
+    # 2. Phishing Risk Calibration
+    if phish_high_conf > 0:
+        phish_risk = 6.5 + 1.5 * phish_high_conf
+    elif phish_med_sum > 0:
+        phish_risk = 4.0 + 1.5 * phish_med_sum
+    elif phish_low_sum > 0:
+        phish_risk = 1.5 + 1.0 * phish_low_sum
+    else:
+        phish_risk = 0.0
+
+    # 3. Dampened Union combination for combined threats
+    if phish_risk > 0 and dp_risk > 0:
+        raw_score = phish_risk + (10.0 - phish_risk) * (1.0 - math.exp(-dp_risk / 3.0))
+    else:
+        raw_score = max(phish_risk, dp_risk)
+
+    # 4. Strict Clamping logic
+    is_phish_severe = any(p["is_phishing"] and p["phishing_risk_level"] == "High Risk" and p["phishing_conf"] > 0.995 for p in predictions_list)
+    severe_count = sum(1 for p in predictions_list if (p["is_phishing"] and p["phishing_risk_level"] == "High Risk") or (p["is_dark_pattern"] and p["dark_pattern_conf"] >= 0.95))
+    
+    can_be_10 = is_phish_severe and severe_count >= 2
+
+    if can_be_10:
+        overall_risk = min(10.0, raw_score)
+    else:
+        overall_risk = min(9.8, raw_score)
     
     logger.info(f"Analysis complete. Found {len(results)} issues. Overall Risk: {overall_risk:.1f}")
 
